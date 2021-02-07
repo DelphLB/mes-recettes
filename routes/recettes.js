@@ -52,7 +52,7 @@ router.post("/", (req, res) => {
     portions,
   } = req.body;
   connection.query(
-    "INSERT INTO playlist (title, ingredients, material, image, instructions, savory, sweet, lactose, veggie, level, portions) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO recipes (title, ingredients, material, image, instructions, savory, sweet, lactose, veggie, level, portions) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     [
       title,
       ingredients,
