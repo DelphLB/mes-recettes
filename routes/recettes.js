@@ -46,10 +46,26 @@ router.post("/", (req, res) => {
     instructions,
     savory,
     sweet,
+    lactose,
+    veggie,
+    level,
+    portions,
   } = req.body;
   connection.query(
-    "INSERT INTO playlist (title, ingredients, material, image, instructions, savory, sweet) VALUES(?, ?, ?, ?, ?, ?, ?)",
-    [title, ingredients, material, image, instructions, savory, sweet],
+    "INSERT INTO playlist (title, ingredients, material, image, instructions, savory, sweet, lactose, veggie, level, portions) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [
+      title,
+      ingredients,
+      material,
+      image,
+      instructions,
+      savory,
+      sweet,
+      lactose,
+      veggie,
+      level,
+      portions,
+    ],
     (err) => {
       if (err) {
         console.log(err);
