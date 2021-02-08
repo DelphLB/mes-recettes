@@ -4,60 +4,69 @@ const connection = require("../config");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-/**
- * Get all users
- */
-router.get("/", (req, res) => {
-  connection.query("SELECT * FROM users", (err, results) => {
+// créer un user
+router.post("/", (req, res) => {
+  const hash = bcrypt.hashSync(req.body.password, 10);
+  const dataUser = {
+    email: req.body.email,
+    password: hash,
+    name: req.body.name,
+  };
+
+  connection.query("INSERT INTO user SET ?", [dataUser], (err, results) => {
     if (err) {
+      console.log(err);
       res.sendStatus(500);
     } else {
-      res.json(results);
+      res.sendStatus(201);
     }
   });
 });
 
-/**
- * Add new user
- */
-router.post("/", (req, res) => {
-  const { name, nickname, password } = req.body;
-  const passwordHash = bcrypt.hashSync(password, 10);
-
-  connection.query(
-    "INSERT INTO users (name, nickname, password) VALUES(?, ?, ?)",
-    [name, nickname, passwordHash],
-    (err) => {
-      if (err) {
-        console.log(err);
-        res.status(500).send("error with the user");
-      } else {
-        res.status(200).send("user saved with success");
-      }
-    }
-  );
-});
-
 router.post("/login", (req, res) => {
-  const { nickname, password } = req.body;
-
   connection.query(
-    "SELECT * FROM users WHERE nickname = ?",
-    [nickname],
-    (err, result) => {
+    "SELECT * FROM user WHERE email = ?",
+    [req.body.email],
+    (err, results) => {
       if (err) {
-        res.status(500).send(err);
+        res.sendStatus(500);
       } else {
-        const goodPassword = bcrypt.compareSync(password, result[0].password);
-        if (goodPassword) {
-          jwt.sign({ result }, process.env.SECRET_KEY_JWT, (err, token) => {
-            res.json({ token });
-          });
-        } else {
-          res.status(500).send("mot de passe incorrect");
-        }
+        if (results.length > 0) {
+          const goodPassword = bcrypt.compareSync(
+            req.body.password,
+            results[0].password
+          );
+          if (goodPassword) {
+            jwt.sign({ results }, process.env.SECRET_KEY_JWT, (err, token) => {
+              res.json({ token });
+            });
+          } else {
+            res.sendStatus(500);
+          }
+        } else res.status(404).send("Email incorrect");
       }
     }
   );
 });
+
+router.post("/profil", verifyToken, (req, res) => {
+  jwt.verify(req.token, process.env.SECRET_KEY_JWT, (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.json(result);
+    }
+  });
+});
+
+function verifyToken(req, res, next) {
+  const bearerHeader = req.headers["authorization"];
+  if (typeof bearerHeader !== "undefined") {
+    const bearer = bearerHeader.split(" ");
+    const bearerToken = bearer[1];
+    req.token = bearerToken;
+    next();
+  }
+}
+
 module.exports = router;
